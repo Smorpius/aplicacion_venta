@@ -1,49 +1,25 @@
+import 'package:aplicacion_venta/MVC/Controlador/Controlador_Almacen.dart';
+import 'package:aplicacion_venta/MVC/Modelo/Producto.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 class AlmacenScreen extends StatefulWidget {
   @override
   _AlmacenScreenState createState() => _AlmacenScreenState();
 }
 
-class Producto {
-  final String id;
-  String nombre;
-  double precio;
-  int cantidad;
-
-  Producto(
-      {required this.id,
-      required this.nombre,
-      required this.precio,
-      required this.cantidad});
-}
-
 class _AlmacenScreenState extends State<AlmacenScreen> {
   List<Producto> productos = [];
+  ControladorAlmacen controlador = ControladorAlmacen();
+  @override
+  void initState() {
+    productos = controlador.obtenerProductos().cast<Producto>();
+    super.initState();
+  }
+
+  TextEditingController _idController = TextEditingController();
   TextEditingController _nombreController = TextEditingController();
   TextEditingController _precioController = TextEditingController();
   TextEditingController _cantidadController = TextEditingController();
-
-  void _registrarProducto() {
-    setState(() {
-      productos.add(
-        Producto(
-          id: productos.length.toString(),
-          nombre: _nombreController.text,
-          precio: double.parse(_precioController.text),
-          cantidad: int.parse(_cantidadController.text),
-        ),
-      );
-      _limpiarCampos();
-    });
-  }
-
-  void _eliminarProducto(Producto producto) {
-    setState(() {
-      productos.remove(producto);
-    });
-  }
 
   void _mostrarDialogoModificarProducto(Producto producto) {
     _nombreController.text = producto.nombre;
@@ -76,14 +52,14 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Cerrar el diálogo
               },
               child: Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
                 _modificarProducto(producto);
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Cerrar el diálogo
               },
               child: Text('Guardar Cambios'),
             ),
@@ -94,6 +70,7 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
   }
 
   void _modificarProducto(Producto producto) {
+    // Lógica para modificar un producto
     setState(() {
       producto.nombre = _nombreController.text;
       producto.precio = double.parse(_precioController.text);
@@ -110,6 +87,11 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
           title: Text('Agregar Producto'),
           content: Column(
             children: [
+              TextField(
+                controller: _idController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'ID del producto'),
+              ),
               TextField(
                 controller: _nombreController,
                 decoration: InputDecoration(labelText: 'Nombre del producto'),
@@ -129,14 +111,25 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Cerrar el diálogo
               },
               child: Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
-                _registrarProducto();
-                Navigator.of(context).pop();
+                int id = int.parse(_idController.text);
+                String nombre = _nombreController.text;
+                double precio = double.parse(_precioController.text);
+                int cantidad = int.parse(_cantidadController.text);
+                Producto producto = Producto(
+                    id: id, nombre: nombre, precio: precio, cantidad: cantidad);
+                if (controlador.registrarProducto(producto)) {
+                  setState(() {
+                    productos.add(producto);
+                  });
+                }
+
+                Navigator.of(context).pop(); // Cerrar el diálogo
               },
               child: Text('Agregar'),
             ),
@@ -147,6 +140,7 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
   }
 
   void _limpiarCampos() {
+    _idController.clear();
     _nombreController.clear();
     _precioController.clear();
     _cantidadController.clear();
@@ -163,7 +157,6 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Contenido actual
             Expanded(
               child: ListView.builder(
                 itemCount: productos.length,
@@ -184,7 +177,7 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
                         PopupMenuItem(
                           child: Text('Eliminar'),
                           onTap: () {
-                            _eliminarProducto(producto);
+                            // _eliminarProducto(producto);
                           },
                         ),
                       ],
