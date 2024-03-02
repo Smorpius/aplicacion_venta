@@ -75,7 +75,22 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
       producto.nombre = _nombreController.text;
       producto.precio = double.parse(_precioController.text);
       producto.cantidad = int.parse(_cantidadController.text);
+      if (controlador.modificarProducto(producto)) {
+        int index = productos.indexWhere((p) => p.id == producto.id);
+        if (index != -1) {
+          productos[index] = producto;
+        }
+      }
       _limpiarCampos();
+    });
+  }
+
+  void _eliminarProducto(Producto producto) {
+    // Lógica para eliminar un producto
+    setState(() {
+      if (controlador.eliminarProducto(producto)) {
+        productos.removeWhere((p) => p.id == producto.id);
+      }
     });
   }
 
@@ -171,13 +186,15 @@ class _AlmacenScreenState extends State<AlmacenScreen> {
                         PopupMenuItem(
                           child: Text('Modificar'),
                           onTap: () {
+                            Navigator.pop(context); // Cerrar el menú
                             _mostrarDialogoModificarProducto(producto);
                           },
                         ),
                         PopupMenuItem(
                           child: Text('Eliminar'),
                           onTap: () {
-                            // _eliminarProducto(producto);
+                            Navigator.pop(context); // Cerrar el menú
+                            _eliminarProducto(producto);
                           },
                         ),
                       ],
